@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="zh">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+    <meta charset="UTF-8">
+    <title>{{roomID}}</title>
+    <link rel="shortcut icon" href="/img/main.ico">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/zui/1.9.1/css/zui.min.css">
+    <link rel="stylesheet" href="/css/main.min.css">
+    <link rel="stylesheet" href="/css/photoswipe.min.css">
+    <link rel="stylesheet" href="/css/default-skin/default-skin.min.css">
+    <script src="//cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="/js/photoswipe.min.js"></script>
+    <script src="/js/photoswipe-ui-default.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="//cdnjs.loli.net/ajax/libs/mdui/0.4.3/css/mdui.min.css">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-145667660-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'UA-145667660-2');
+    </script>
+
+</head>
+
+<body>
+    <nav class="navbar navbar-inverse" role="navigation">
+        <div class="container-fluid">
+            <!-- 导航头部 -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target=".navbar-collapse-example">
+                    <span class="sr-only">切换导航</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="javascript:;">极客式聊天室v1.0.7</a>
+            </div>
+            <!-- 导航项目 -->
+            <div class="collapse navbar-collapse navbar-collapse-example">
+                <!-- 右侧的导航项目 -->
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown">管理<b
+                                class="caret"></b></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="javascript:;">测试</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div><!-- END .navbar-collapse -->
+        </div>
+    </nav>
+    <div id="jizo">
+        <div class="alert alert-info-inverse with-icon" id="fresh">
+            <i class="icon-info-sign"></i>
+            <div class="content">
+                <p>如果你能看见这个提示，请刷新或等待网页加载完毕（正常进入会提示输入昵称）</p>
+            </div>
+        </div>
+        <div style="width:100%;">
+            <div class="alert alert-danger-inverse alert-dismissable mdui-center">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <p>富强，民主，文明，和谐。自由，平等，公正，法治。爱国，敬业，诚信，友善。</p>
+                <p>互联网不是法外之地，请谨言慎行</p>
+            </div>
+        </div>
+        <button class="btn btn-primary buttoncs" data-toggle="tooltip" data-placement="left" title="点我更改昵称"
+            type="button" id='nick'>我的昵称:<span class="label label-badge" id='userNamed'></span></button>
+        <button class="btn btn-info buttoncs" type="button" data-tip-class="popover-info" data-toggle="popover"
+            data-placement="bottom" data-content="" id='cs' title="在线成员列表">当前在线人数:<span class="label label-badge"
+                id='count'>{{users.length}}</span></button>
+        <button class="btn btn-success buttoncs" type="button">房间：<span class="label label-badge"
+                id='count'>{{roomID}}</span></button>
+    </div>
+    <div class="modal fade" id="myModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span
+                            class="sr-only">关闭</span></button>
+                    <h4 class="modal-title" id='setNick'>设置昵称</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info" id='nickInfo'>请设置你的昵称,最大支持20个字符</div>
+                    <div class="mdui-textfield mdui-textfield-floating-label">
+                        <i class="mdui-icon material-icons">account_circle</i>
+                        <label class="mdui-textfield-label">新昵称</label>
+                        <input class="mdui-textfield-input" id="userNamein" maxlength="20" type="text" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button id="changeName" class="btn btn-primary">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="msglog"></div>
+
+    <div style="position:fixed;bottom:0;width:100%;background-color:#ecf0f1;" class="load-indicator"
+        data-loading="正在上传..." id="loadIndicator1">
+        <div class="mdui-container-fluid" style=" margin:0 0;padding: 0 0;">
+            <div class="mdui-col-xs-9 mdui-col-sm-10 mdui-col-md-11">
+                <div class="mdui-textfield mdui-textfield-floating-label" style="padding-top:0;">
+                    <i class="mdui-icon material-icons">textsms</i>
+                    <label class="mdui-textfield-label">Message</label>
+                    <textarea class="mdui-textfield-input" id='messageInput' maxlength="800"></textarea>
+                    <div class="mdui-textfield-helper">可按Enter键发送</div>
+                </div>
+            </div>
+            <div class="mdui-col-xs-3 mdui-col-sm-2 mdui-col-md-1" style="padding-top: 40px;">
+                <form enctype="multipart/form-data" style="float: right">
+                    <input name="file" type="file" id="file" accept='image/*'
+                        style="display: none;visibility: hidden;" />
+                    <button type="button" class="mdui-btn mdui-btn-icon  mdui-color-grey-900 mdui-ripple"
+                        style="margin-left: 2px;" onclick="file.click()"><i
+                            class="mdui-icon material-icons">insert_photo</i></button>
+                </form>
+                <div style="float: right ">
+                    <button class="mdui-btn mdui-btn-icon  mdui-color-grey-900 mdui-ripple" id="sendMsg"><i
+                            class="mdui-icon material-icons">send</i></button></div>
+            </div>
+        </div>
+    </div>
+    <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+        <!-- Background of PhotoSwipe. 
+         It's a separate element, as animating opacity is faster than rgba(). -->
+        <div class="pswp__bg"></div>
+        <!-- Slides wrapper with overflow:hidden. -->
+        <div class="pswp__scroll-wrap">
+            <!-- Container that holds slides. PhotoSwipe keeps only 3 slides in DOM to save memory. -->
+            <!-- don't modify these 3 pswp__item elements, data is added later on. -->
+            <div class="pswp__container">
+                <div class="pswp__item"></div>
+                <div class="pswp__item"></div>
+                <div class="pswp__item"></div>
+            </div>
+            <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+            <div class="pswp__ui pswp__ui--hidden">
+                <div class="pswp__top-bar">
+                    <!--  Controls are self-explanatory. Order can be changed. -->
+                    <div class="pswp__counter"></div>
+                    <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                    <button class="pswp__button pswp__button--share" title="Share"></button>
+                    <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                    <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                    <!-- Preloader demo https://codepen.io/dimsemenov/pen/yyBWoR -->
+                    <!-- element will get class pswp__preloader--active when preloader is running -->
+                    <div class="pswp__preloader">
+                        <div class="pswp__preloader__icn">
+                            <div class="pswp__preloader__cut">
+                                <div class="pswp__preloader__donut"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                    <div class="pswp__share-tooltip"></div>
+                </div>
+                <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+                </button>
+                <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+                </button>
+                <div class="pswp__caption">
+                    <div class="pswp__caption__center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/main.min.js"></script>
+    <script src="/js/image-compressor.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.9.1/js/zui.min.js"></script>
+    <script src="//cdnjs.loli.net/ajax/libs/mdui/0.4.3/js/mdui.min.js"></script>
+</body>
+
+</html>
